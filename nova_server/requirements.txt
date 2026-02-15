@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-multipart
+watchdog
+pyttsx3
+send2trash
+requests

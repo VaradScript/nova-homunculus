@@ -1,93 +1,55 @@
-                 
-# Javis
+# Nova Homunculus Ecosystem
 
-Assistanst based pa
+The **Nova Homunculus Ecosystem** is a hybrid AI assistant platform that spans across your PC (Windows) and Mobile (Android). It transforms your computer into a "Living Desktop" (Homunculus) managed by a powerful Python brain (Nova Server).
 
+## 🌟 Core Components
 
-<br>But the page cannot open anymore so that is why I have moved it here.
- 
-## Getting Started.
+### 1. The Brain: Nova Server (`nova_server/`)
+A Python FastAPI server that acts as the central intelligence of the system.
+- **Functions**:
+    - `POST /upload`: Receives files from mobile.
+    - `POST /command/clean`: Triggers the "File Janitor" to clean clutter (Desktop/Downloads/Temp).
+    - `POST /command/lock`: Instant Windows Lock.
+    - `POST /invoke_ai`: Connects to `ollama` for intelligent conversations.
+- **Local Address**: `http://YOUR_PC_IP:8000`
 
-These instructions will give you a copy of the project up and running on
-your local machine for development and testing purposes. See deployment
-for notes on deploying the project on a live system.
- 
-### Prerequisites
+### 2. The Face: Homunculus Interface (`jarvis-pro-v3/`)
+A futuristic, transparent Electron overlay that sits on your desktop.
+- **Features**:
+    - **Interactive Avatar**: Hover to reveal controls.
+    - **Voice Command**: "Active Listening" for commands like "Clean waste", "Lock PC", "Time".
+    - **Visual Feedback**: Displays system status and responses.
+    - **Intelligent Fallback**: Uses Ollama (Llama 3.2) to chat if the command is unrecognized.
 
-Requirements for the software and other tools to build, test and push 
+### 3. The Remote: Nova Android (`nova_android/`)
+Your mobile command center.
+- **Capabilities**:
+    - **"Send file to PC"**: Uploads files directly to your PC.
+    - **"Clean my PC"**: Remotely triggers the Janitor.
+    - **"Lock PC"**: Secure your workstation from anywhere on Wi-Fi.
 
-### Installing
+## 🚀 Usage
 
-A step by step series of examples that tell you how to get a development
-environment running
+### Starting the System
+Simply run the master script:
+**`RUN_HOMUNCULUS.bat`**
+(This will start both the Python Brain and the Electron Interface).
 
-Say what the step will be
+### Voice Commands (PC Interface)
+- **"Hello"**: Wakes up the assistant.
+- **"Clean waste"**: Initiates system cleanup.
+- **"Lock PC"**: Locks the screen.
+- **"Time"**: Tells current time.
+- **Any other query**: e.g., "Tell me a joke", "What is quantum computing?" (Requires Ollama).
 
-    Give the example
+### Mobile Setup
+1. Open `nova_android` in Android Studio.
+2. Update `MainActivity.kt` with your PC's IP address.
+3. Install on phone.
+4. Ensure phone is on the same Wi-Fi.
 
-And repeat..
-
-    until finished
-
-End with an example of getting some data out of the system or using it
-for a little demo
- 
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Sample Tests
-
-Explain what these tests test and why
-
-    Give an example
-
-### Style test
-
-Checks if the best practices and the right coding style has been used.
-
-    Give an example
- 
-## Deployment
-
-Add additional notes to deploy this on a live system
- 
-## Built With
-
-Mention the tools you used to build this project
-
-- [Contributor Covenant](https://www.contributor-covenant.org/)
-- [Creative Commons](https://creativecommons.org/)
-
- 
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code
-of conduct, and the process for submitting pull requests to us.
- 
-## Versioning
-
-We use [Semantic Versioning](http://semver.org/) for versioning. For the versions
-available, see the [tags on this
-repository](https://github.com/PurpleBooth/a-good-readme-template/tags).
- 
-# Authors
-
-See also the list of
-[contributors](https://github.com/PurpleBooth/a-good-readme-template/contributors)
-who participated in this project.
-
-- **Billie Thompson** - _Provided README Template_ - [PurpleBooth](https://github.com/PurpleBooth)
-- **Shaan Khan** - _Provided Created README Generator_ - [Shaan Khan](https://github.com/ShaanCoding)
-
- 
-# License
-
-This project is licensed under the [CC0 1.0 Universal](LICENSE.md)
-Creative Commons License --see the [LICENSE.md](LICENSE.md) file for
-details
- 
-
-
-##going oi mprove this in 2 weeks pakka
-
+## 📂 Directory Structure
+- `nova_server/`: Python Backend.
+- `jarvis-pro-v3/`: React/Electron Frontend.
+- `nova_android/`: Android App Source.
+- `Received/`: Default folder for incoming files.
