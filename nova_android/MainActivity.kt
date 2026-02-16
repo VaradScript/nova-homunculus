@@ -9,6 +9,8 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import org.json.JSONObject
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -54,6 +56,21 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         tts = TextToSpeech(this) { status ->
             if (status != TextToSpeech.ERROR) {
                 tts.language = Locale.US
+                
+                tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {
+                        runOnUiThread { statusText.text = "Responding..." }
+                    }
+                    override fun onDone(utteranceId: String?) {
+                        runOnUiThread { startListening() }
+                    }
+                    override fun onError(utteranceId: String?) {
+                        runOnUiThread { 
+                            listenButton.isEnabled = true
+                            statusText.text = "TTS Error"
+                        }
+                    }
+                })
             }
         }
 
@@ -91,21 +108,30 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             val command = matches[0].lowercase()
             statusText.text = "Heard: $command"
             
-            if (command.contains("hello nova")) {
-                speak("Hello! I am ready.")
-            } 
-            else if (command.contains("send file")) {
-                openFilePicker()
-            } 
-            else if (command.contains("clean my pc") || command.contains("clean workspace")) {
-                sendSystemCommand(CLEAN_URL, "Cleaning protocol initiated.")
+            when {
+                command.contains("hello nova") || command.contains("hey nova") -> {
+                    speak("I'm listening. What do you need?")
+                }
+                command.contains("send file") -> {
+                    openFilePicker()
+                }
+                command.contains("clean my pc") || command.contains("clean workspace") -> {
+                    sendSystemCommand(CLEAN_URL, "Cleaning protocol initiated.")
+                }
+                command.contains("lock pc") || command.contains("lock my pc") -> {
+                    sendSystemCommand(LOCK_URL, "Locking workstation.")
+                }
+                command.contains("thank you") -> {
+                    speak("You are very welcome.")
+                }
+                else -> {
+                    // Forward to server for AI processing
+                    sendSystemCommand("$BASE_URL/invoke_ai", null, command)
+                }
             }
-            else if (command.contains("lock pc") || command.contains("lock my pc")) {
-                sendSystemCommand(LOCK_URL, "Locking workstation.")
-            }
-            else {
-                 statusText.text = "Unknown command: $command"
-            }
+        } else {
+            // No results, restart listening to keep it alive
+            startListening()
         }
     }
 
@@ -113,25 +139,45 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         filePickerLauncher.launch("*/*")
     }
 
-    private fun sendSystemCommand(url: String, successMessage: String) {
+    private fun sendSystemCommand(url: String, successMessage: String?, prompt: String? = null) {
         val client = OkHttpClient()
-        val request = Request.Builder().url(url).post(RequestBody.create(null, ByteArray(0))).build()
+        val body = if (prompt != null) {
+            val json = "{\"prompt\": \"$prompt\"}"
+            RequestBody.create("application/json".toMediaTypeOrNull(), json)
+        } else {
+            RequestBody.create(null, ByteArray(0))
+        }
+
+        val request = Request.Builder().url(url).post(body).build()
         
         Thread {
             try {
                 val response = client.newCall(request).execute()
+                val responseBody = response.body?.string()
+                
                 runOnUiThread {
                     if (response.isSuccessful) {
-                        speak(successMessage)
-                        Toast.makeText(this, "Command Sent", Toast.LENGTH_SHORT).show()
+                        if (successMessage != null) {
+                            speak(successMessage)
+                        } else if (responseBody != null) {
+                            // Try to extract 'reply' from json
+                            val reply = try {
+                                val jsonObject = JSONObject(responseBody)
+                                jsonObject.getString("reply")
+                            } catch (e: Exception) {
+                                "Command processed."
+                            }
+                            speak(reply)
+                        }
+                        Toast.makeText(this, "Link Established", Toast.LENGTH_SHORT).show()
                     } else {
-                        speak("I could not reach the PC.")
+                        speak("I could not reach the core.")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    speak("Connection Error")
+                    speak("Neural link failed.")
                 }
             }
         }.start()
@@ -195,6 +241,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     override fun onEvent(eventType: Int, params: Bundle?) {}
 
     private fun speak(text: String) {
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        val params = Bundle()
+        params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "messageID")
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "messageID")
     }
 }

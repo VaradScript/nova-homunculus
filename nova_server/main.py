@@ -213,6 +213,7 @@ class AIRequest(str):
 @app.post("/invoke_ai")
 async def invoke_ai(data: dict):
     prompt = data.get("prompt", "")
+    silent = data.get("silent", True) # Default to silent (let client speak)
     print(f"User asked: {prompt}")
     
     try:
@@ -227,17 +228,22 @@ async def invoke_ai(data: dict):
             },
         ])
         reply = response['message']['content']
-        speak(reply)
+        
+        if not silent:
+            speak(reply)
+            
         return {"reply": reply}
     except Exception as e:
         print(f"Ollama Error: {e}")
-        # SIMPLE FALLBACK (If Ollama fails, at least say SOMETHING)
+        # SIMPLE FALLBACK
         fallback = "I cannot reach my neural core, but I exist."
         if "hello" in prompt.lower(): fallback = "Greetings, user."
         elif "time" in prompt.lower(): fallback = f"It is {time.strftime('%I:%M %p')}"
         elif "who" in prompt.lower(): fallback = "I am the Novus Homunculus system."
         
-        speak(fallback)
+        if not silent:
+            speak(fallback)
+            
         return {"reply": fallback}
 
 def get_local_ip():

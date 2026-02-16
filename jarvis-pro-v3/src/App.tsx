@@ -93,16 +93,36 @@ export default function App() {
         try { recognition.start(); } catch (e) { }
     };
 
+    const [isActive, setIsActive] = useState(false); // For wake word logic
+
     const handleCommand = async (text: string) => {
         setTranscript(text);
+
+        // Wake word logic: "Darking"
+        if (!isActive) {
+            if (text.includes("darking") || text.includes("hey darking") || text.includes("nova") || text.includes("hello")) {
+                setIsActive(true);
+                speak("I'm listening, love. What can I do for you?");
+                return;
+            }
+            // If not active, ignore other texts (or just wait)
+            return;
+        }
+
+        // --- ACTIVE COMMANDS ---
 
         // Simple local commands
         if (text.includes("hello") || text.includes("hi")) {
             speak("Greetings. I am ready.");
         } else if (text.includes("time")) {
             speak(`It is ${new Date().toLocaleTimeString()}`);
+        } else if (text.includes("thank you") || text.includes("thanks")) {
+            speak("Anytime, darling.");
+            setIsActive(false); // Go back to idle/wake-word mode?
+        } else if (text.includes("stop") || text.includes("go to sleep")) {
+            speak("Understood. I'll be here if you need me.");
+            setIsActive(false);
         } else if (text.includes("clean") || text.includes("waste")) {
-            // Trigger Nova Server Janitor
             speak("Initiating cleanup protocol.");
             try {
                 await fetch('http://localhost:8000/command/clean', { method: 'POST' });
@@ -115,16 +135,18 @@ export default function App() {
                 await fetch('http://localhost:8000/command/lock', { method: 'POST' });
             } catch (e) { }
         } else {
-            // Intelligent Fallback (Ollama)
+            // Intelligent Fallback (Ollama via Nova Server)
             try {
-                // Determine if query is worth sending (longer than 2 chars)
                 if (text.length > 2) {
-                    await fetch('http://localhost:8000/invoke_ai', {
+                    const response = await fetch('http://localhost:8000/invoke_ai', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ prompt: text })
                     });
-                    // Note: Server speaks the reply directly
+                    const data = await response.json();
+                    if (data.reply) {
+                        speak(data.reply);
+                    }
                 }
             } catch (e) {
                 speak("I am having trouble connecting to my brain.");
